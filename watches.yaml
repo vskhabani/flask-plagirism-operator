@@ -1,0 +1,8 @@
+---
+- version: v1alpha1
+  group: example.com
+  kind: Webapp
+  role: webapp
+  overrideValues:
+   frontend.image: $RELATED_IMAGE_FRONTEND
+

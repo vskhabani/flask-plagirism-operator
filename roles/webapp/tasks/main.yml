@@ -1,0 +1,87 @@
+---
+- name: deploy flaskapp frontend
+  vars:
+    frontend:
+      image:  "{{ lookup('env','RELATED_IMAGE_FRONTEND') }}"
+  k8s:
+    definition:
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: flaskapp-frontend
+        namespace: '{{ ansible_operator_meta.namespace }}'
+        labels:
+          app: flaskapp
+          tier: frontend
+      spec:
+        replicas: 1
+        selector:
+          matchLabels:
+            app: flaskapp
+            tier: frontend
+        template:
+          metadata:
+            labels:
+              app: flaskapp
+              tier: frontend
+          spec:
+            serviceAccount: webapp-operator
+            containers:
+            - name: frontend
+              image: "{{ frontend.image }}"
+              imagePullPolicy: Always 
+              ports:
+              - name: http-server
+                containerPort: 5000              
+              env:
+              - name: PORT
+                value: "5000"
+            securityContext: {}  
+          serviceAccountName: webapp-operator
+          serviceAccount: webapp-operator
+        strategy:
+          type: Recreate
+- name: create service for  frontend
+  k8s:
+    definition:
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: flaskapp-frontend
+        namespace: '{{ ansible_operator_meta.namespace }}'
+        labels:
+          app: flaskapp
+          tier: frontend
+      spec:
+        selector:
+          app: flaskapp
+          tier: frontend
+        ports:
+          - protocol: TCP
+            port: 5000
+            targetPort: http-server            
+        type: NodePort
+
+- name: create route for flaskapp frontend
+  k8s:
+    definition:
+      apiVersion: route.openshift.io/v1
+      kind: Route
+      metadata:
+        name: flaskapp-frontend-route
+        namespace: '{{ ansible_operator_meta.namespace }}'
+        labels:
+          app: flaskapp
+          tier: frontend
+      spec:
+        host:
+        to:
+          kind: Service
+          name: flaskapp-frontend
+          weight: 100
+        port:
+          targetPort: 5000
+        tls:
+          termination: edge
+          insecureEdgeTerminationPolicy: Allow
+        wildcardPolicy: None

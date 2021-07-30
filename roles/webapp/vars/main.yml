@@ -1,0 +1,10 @@
+---
+frontend:
+  image: vaibhavkhabani/flask-plagirism-api:v1
+  imagePullSecrets: []
+  replicaCount: 1
+  
+  service:
+    type: NodePort
+    port: 5000
+    targetPort: http-server

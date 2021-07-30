@@ -1,0 +1,13 @@
+apiVersion: example.com/v1alpha1
+kind: Webapp
+metadata:
+  name: webapp-sample-1
+spec:
+  frontend:
+    image: vaibhavkhabani/flask-plagirism-api:v1
+    imagePullSecrets: []
+    replicaCount: 1
+    service:
+      port: 5000
+      targetPort: http-server
+      type: NodePort
